@@ -1,3 +1,0 @@
-#!/home/corey/Desktop/A3/env/bin/python3
-from numba.pycc import main
-main()
