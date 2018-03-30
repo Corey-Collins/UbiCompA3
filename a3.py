@@ -22,6 +22,10 @@ window_duration = 10
 # convert all times to datetime (will be set to today's date, but that is ignored)
 data['Time'] = pd.to_datetime(data['Time'])
 
+# instantiate dataframe to contain features and labels
+data_columns = {'mean_gsr': [], 'max_gsr': [], 'min_gsr': [], 'slope_gsr': [], 'mean_gsr_peak_height': [], 'gsr_peak_amount': [], 'gsr_25_peak_quantile': [], 'gsr_50_peak_quantile': [], 'gsr_75_peak_quantile': [], 'labels': []}
+final_dataframe = pd.DataFrame(data=data_columns)
+
 # iterate windows until window is empty
 while True:
 
@@ -72,9 +76,28 @@ while True:
     for i in peak_indexes:
         window_peaks.append(arr[i])
 
-    
+    window_peak_differences = np.diff(peak_indexes)
 
-    break
+    window_peak_percentiles = []
+
+    if not window_peak_differences.any():
+        window_peak_differences = [0]
+
+    window_peak_percentiles.append([np.percentile(window_peak_differences, 25), np.percentile(window_peak_differences, 50), np.percentile(window_peak_differences, 75)])
+
+    window_mean_peak_height = np.mean(window_peaks)
+
+    # 0 for unstressed
+    window_label = 0
+
+    # gsr_25, gsr_50, gsr_75, gsr_peak_number, label, max_gsr, mean_gsr, mean_gsr_peak_height, min_gsr, slope_gsr in that order
+    final_dataframe.loc[window_number] = [window_peak_percentiles[0][0],window_peak_percentiles[0][1],window_peak_percentiles[0][2],window_peaks_number,window_label,window_max,window_mean,window_mean_peak_height,window_min,window_slope]
+
+
 
     # iterate to next window
     window_number += 1
+
+#save final dataframe to csv
+final_dataframe.to_csv('gsr_features.csv', sep=' ', encoding='utf-8')
+print('gsr data saved in gsr_features.csv')
